@@ -1,0 +1,142 @@
+{
+  "entities": {
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Income or expense record",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner user UID"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["income", "expense"],
+          "description": "Type of transaction"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount in THB"
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Category name"
+        },
+        "date": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "Transaction date in YYYY-MM-DD"
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Optional notes or details"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["cash", "transfer", "credit_card", "other"],
+          "description": "Payment method"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Update timestamp"
+        }
+      },
+      "required": ["userId", "type", "amount", "category", "date"]
+    },
+    "Budget": {
+      "title": "Budget",
+      "description": "Monthly budget limit per category or total",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner user UID"
+        },
+        "month": {
+          "type": "string",
+          "maxLength": 7,
+          "description": "Year and month in YYYY-MM"
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Category or 'total'"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Budget limit amount"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Update timestamp"
+        }
+      },
+      "required": ["userId", "month", "category", "amount"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User preferences and metadata",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "User UID"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 255,
+          "description": "User email"
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Display name"
+        },
+        "currency": {
+          "type": "string",
+          "maxLength": 10,
+          "description": "Currency code like THB"
+        },
+        "monthlyBudget": {
+          "type": "number",
+          "description": "Monthly expense budget target"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last updated timestamp"
+        }
+      },
+      "required": ["userId", "email"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": {
+        "$ref": "#/entities/Transaction"
+      },
+      "description": "User private income and expense transactions"
+    },
+    "/users/{userId}/budgets/{budgetId}": {
+      "schema": {
+        "$ref": "#/entities/Budget"
+      },
+      "description": "User monthly category budgets"
+    },
+    "/users/{userId}/profile/{profileId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "User profile and financial preferences"
+    }
+  }
+}

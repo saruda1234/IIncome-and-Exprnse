@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default-deny catch-all to prevent unauthorized access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Health check test connection doc
+    match /test/{docId} {
+      allow read: if true;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // User Profile subcollection
+    match /users/{userId}/profile/{profileId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(profileId)
+        && incoming().userId == userId
+        && incoming().email is string && incoming().email.size() <= 255
+        && (!('displayName' in incoming()) || (incoming().displayName is string && incoming().displayName.size() <= 100))
+        && (!('currency' in incoming()) || (incoming().currency is string && incoming().currency.size() <= 10))
+        && (!('monthlyBudget' in incoming()) || incoming().monthlyBudget is number);
+      allow update: if isOwner(userId)
+        && incoming().userId == existing().userId
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'currency', 'monthlyBudget', 'updatedAt']);
+      allow delete: if isOwner(userId);
+    }
+
+    // User Transactions subcollection
+    match /users/{userId}/transactions/{transactionId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(transactionId)
+        && incoming().userId == userId
+        && (incoming().type == 'income' || incoming().type == 'expense')
+        && incoming().amount is number && incoming().amount >= 0
+        && incoming().category is string && incoming().category.size() <= 100
+        && incoming().date is string && incoming().date.size() <= 20
+        && (!('note' in incoming()) || (incoming().note is string && incoming().note.size() <= 500))
+        && (!('paymentMethod' in incoming()) || (incoming().paymentMethod in ['cash', 'transfer', 'credit_card', 'other']));
+      allow update: if isOwner(userId)
+        && incoming().userId == existing().userId
+        && (incoming().type == 'income' || incoming().type == 'expense')
+        && incoming().amount is number && incoming().amount >= 0
+        && incoming().category is string && incoming().category.size() <= 100
+        && incoming().date is string && incoming().date.size() <= 20
+        && (!('note' in incoming()) || (incoming().note is string && incoming().note.size() <= 500))
+        && (!('paymentMethod' in incoming()) || (incoming().paymentMethod in ['cash', 'transfer', 'credit_card', 'other']))
+        && incoming().diff(existing()).affectedKeys().hasOnly(['type', 'amount', 'category', 'date', 'note', 'paymentMethod', 'updatedAt']);
+      allow delete: if isOwner(userId);
+    }
+
+    // User Budgets subcollection
+    match /users/{userId}/budgets/{budgetId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(budgetId)
+        && incoming().userId == userId
+        && incoming().month is string && incoming().month.size() <= 7
+        && incoming().category is string && incoming().category.size() <= 100
+        && incoming().amount is number && incoming().amount >= 0;
+      allow update: if isOwner(userId)
+        && incoming().userId == existing().userId
+        && incoming().amount is number && incoming().amount >= 0
+        && incoming().diff(existing()).affectedKeys().hasOnly(['amount', 'category', 'updatedAt']);
+      allow delete: if isOwner(userId);
+    }
+  }
+}

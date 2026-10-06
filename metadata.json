@@ -1,0 +1,6 @@
+{
+  "name": "Income and Expense - ระบบจัดการรายรับรายจ่าย",
+  "description": "เว็บแอปพลิเคชันจัดการรายรับ-รายจ่าย สรุปผลรายเดือน กราฟวิเคราะห์ข้อมูล และจัดเก็บข้อมูลอย่างปลอดภัยบน Firebase พร้อมระบบเข้าสู่ระบบด้วย Gmail",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
